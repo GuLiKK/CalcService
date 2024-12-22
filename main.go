@@ -198,8 +198,7 @@ func calculateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
-	// Если всё успешно
+	
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(responseData{Result: fmt.Sprintf("%g", result)})
 }
