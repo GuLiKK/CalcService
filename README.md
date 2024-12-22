@@ -1,108 +1,74 @@
 # CalcService
 
-**CalcService** — это веб-приложение на Go, которое принимает арифметические выражения в формате JSON и возвращает результат их вычисления. Кроме того, оно обрабатывает различные ошибки: от деления на ноль до некорректных символов в выражении.
+Это простое веб-приложение на Go, которое умеет вычислять арифметические выражения из JSON-запроса и возвращать результат.
 
-## Как это работает
+## Как пользоваться
 
-1. Приложение слушает запросы на порту `8080` по адресу:
+1. Приложение запущено на порту `8080`, отвечает на адрес:
    ```
-   http://localhost:8080
+   http://localhost:8080/api/v1/calculate
    ```
-2. Главный эндпоинт:
-   ```
-   /api/v1/calculate
-   ```
-   Сюда нужно отправлять **POST**-запрос в формате JSON, например:
+2. Нужно отправлять POST-запрос с JSON-объектом вида:
    ```json
    {
      "expression": "2+2*2"
    }
    ```
-3. Приложение разбирает и вычисляет выражение, а затем возвращает результат в поле `result` или ошибку в поле `error`.
+3. Сервис вернёт либо:
+   ```json
+   {
+     "result": "6"
+   }
+   ```
+   если всё в порядке, либо:
+   ```json
+   {
+     "error": "Expression is not valid"
+   }
+   ```
+   (код 422), если выражение неправильное, или:
+   ```json
+   {
+     "error": "Internal server error"
+   }
+   ```
+   (код 500), если что-то сломалось внутри.
 
-## Типы ответов
+## Примеры (curl)
 
-- **200 OK**  
-  Приложение вернёт:
-  ```json
-  {
-    "result": "6"
-  }
-  ```
-  Если выражение корректно (например, `2+2*2`).
-
-- **422 Unprocessable Entity**  
-  Приложение вернёт:
-  ```json
-  {
-    "error": "Expression is not valid"
-  }
-  ```
-  Если выражение некорректно (лишние символы, неправильный синтаксис, деление на ноль и т.д.).
-
-- **500 Internal Server Error**  
-  Приложение вернёт:
-  ```json
-  {
-    "error": "Internal server error"
-  }
-  ```
-  Если внутри сервиса произошла непредвиденная ошибка.
-
-## Примеры использования (curl)
-
-Ниже несколько примеров запроса с помощью `curl` для **Windows** (cmd/PowerShell). Если вы используете **Git Bash/WSL** или **Linux**, можно заменить двойные кавычки на одинарные и убрать экранирование `\"`.
-
-### 1. Успешный запрос (результат `6`):
+### Успешный запрос (6)
 ```bash
 curl --location "http://localhost:8080/api/v1/calculate" ^
-  --header "Content-Type: application/json" ^
-  --data "{\"expression\":\"2+2*2\"}"
-```
-Ожидаемый ответ:
-```json
-{
-  "result": "6"
-}
+     --header "Content-Type: application/json" ^
+     --data "{\"expression\":\"2+2*2\"}"
 ```
 
-### 2. Ошибка 422 (деление на ноль):
+### Деление на ноль (422)
 ```bash
 curl --location "http://localhost:8080/api/v1/calculate" ^
-  --header "Content-Type: application/json" ^
-  --data "{\"expression\":\"2/0\"}"
-```
-Ожидаемый ответ:
-```json
-{
-  "error": "Expression is not valid"
-}
+     --header "Content-Type: application/json" ^
+     --data "{\"expression\":\"2/0\"}"
 ```
 
-### 3. Ошибка 422 (некорректные символы):
+### Некорректные символы (422)
 ```bash
 curl --location "http://localhost:8080/api/v1/calculate" ^
-  --header "Content-Type: application/json" ^
-  --data "{\"expression\":\"2+a\"}"
-```
-Ожидаемый ответ:
-```json
-{
-  "error": "Expression is not valid"
-}
+     --header "Content-Type: application/json" ^
+     --data "{\"expression\":\"2+a\"}"
 ```
 
-### 4. Ошибка 500 (внутренняя ошибка):
-При сбое внутри самого приложения ответ будет:
-```json
-{
-  "error": "Internal server error"
-}
-```
+## Запуск
 
-## Пример с `Invoke-RestMethod` (PowerShell)
+1. Склонируйте репозиторий или скачайте файлы.
+2. В папке с проектом выполните:
+   ```
+   go run main.go
+   ```
+3. Всё, приложение работает на `http://localhost:8080`. Посылайте POST-запросы на `/api/v1/calculate`.
 
-Если не хочется возиться с кавычками в `curl` на Windows, можно использовать встроенный способ PowerShell:
+## Если вы на Windows в PowerShell
+
+Можно использовать `Invoke-RestMethod`:
 ```powershell
 Invoke-RestMethod `
   -Uri "http://localhost:8080/api/v1/calculate" `
@@ -110,36 +76,5 @@ Invoke-RestMethod `
   -Body '{"expression": "2+2*2"}' `
   -ContentType "application/json"
 ```
-Ответ придёт в виде объекта PowerShell, содержащего поля JSON.
 
-## Как запустить проект
-
-1. **Установите Go** (версии 1.18 или новее).
-2. **Склонируйте репозиторий** (или скачайте архив) из GitHub:
-   ```bash
-   git clone https://github.com/<ВАШ-ЛОГИН>/<ИМЯ-РЕПОЗИТОРИЯ>.git
-   ```
-3. **Перейдите в папку** с проектом:
-   ```bash
-   cd <ИМЯ-РЕПОЗИТОРИЯ>
-   ```
-4. **Запустите** приложение:
-   ```bash
-   go run main.go
-   ```
-5. Сервис стартует на порту `8080`. Теперь можно отправлять **POST**-запросы на:
-   ```
-   http://localhost:8080/api/v1/calculate
-   ```
-
-## Дополнительно
-
-- Если у вас **Git Bash** или **WSL**, то можно писать в стиле Linux без экранирования:
-  ```bash
-  curl --location 'http://localhost:8080/api/v1/calculate' \
-    --header 'Content-Type: application/json' \
-    --data '{
-      "expression": "2+2*2"
-    }'
-  ```
-  В таком случае пример выше с `^` и экранированными кавычками не нужен.
+Или запустить Git Bash/WSL и использовать команды, как в Linux.  
