@@ -1,37 +1,142 @@
 # CalcService
-Проект «CalcService» — это простой веб-сервис на Go, который вычисляет арифметические выражения. Он принимает POST-запрос с JSON-данными, где ключ "expression" хранит строку-выражение, а в ответ возвращает результат вычисления или ошибку.
 
-Развёрнутый сервис слушает запросы на эндпоинте /api/v1/calculate.
+**CalcService** — это веб-приложение на Go, которое принимает арифметические выражения в формате JSON и возвращает результат их вычисления. Кроме того, оно обрабатывает различные ошибки: от деления на ноль до некорректных символов в выражении.
 
-Входные данные (JSON) должны содержать поле expression. Например:
-{ "expression": "2+2*2" }
+## Как это работает
 
-Возможные ответы:
+1. Приложение слушает запросы на порту `8080` по адресу:
+   ```
+   http://localhost:8080
+   ```
+2. Главный эндпоинт:
+   ```
+   /api/v1/calculate
+   ```
+   Сюда нужно отправлять **POST**-запрос в формате JSON, например:
+   ```json
+   {
+     "expression": "2+2*2"
+   }
+   ```
+3. Приложение разбирает и вычисляет выражение, а затем возвращает результат в поле `result` или ошибку в поле `error`.
 
-Код 200 OK, если вычисление завершилось успешно. Тогда сервис вернёт JSON вида:
-{ "result": "6" }
-Код 422 Unprocessable Entity, если пользователь ввёл некорректное выражение, сделал деление на ноль или в тексте оказались лишние символы. Тогда в ответ придёт:
-{ "error": "Expression is not valid" }
-Код 500 Internal Server Error, если в процессе обработки возникла какая-то внутренняя ошибка. Тогда в ответ придёт:
-{ "error": "Internal server error" }
-Ниже несколько примеров использования с помощью curl (в формате, работающем на Linux или в Git Bash/WSL под Windows):
+## Типы ответов
 
-Пример успешного вычисления (получим ответ 6):
-curl --location 'http://localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{"expression": "2+2*2"}'
+- **200 OK**  
+  Приложение вернёт:
+  ```json
+  {
+    "result": "6"
+  }
+  ```
+  Если выражение корректно (например, `2+2*2`).
 
-Пример ошибки 422 из-за деления на ноль:
-curl --location 'http://localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{"expression": "2/0"}'
+- **422 Unprocessable Entity**  
+  Приложение вернёт:
+  ```json
+  {
+    "error": "Expression is not valid"
+  }
+  ```
+  Если выражение некорректно (лишние символы, неправильный синтаксис, деление на ноль и т.д.).
 
-Пример ошибки 422 из-за недопустимого символа:
-curl --location 'http://localhost:8080/api/v1/calculate' --header 'Content-Type: application/json' --data '{"expression": "2+a"}'
+- **500 Internal Server Error**  
+  Приложение вернёт:
+  ```json
+  {
+    "error": "Internal server error"
+  }
+  ```
+  Если внутри сервиса произошла непредвиденная ошибка.
 
-Пример 500 Internal Server Error воспроизвести сложно, но если внутренняя ошибка действительно произойдёт, в ответе будет:
-{ "error": "Internal server error" }
+## Примеры использования (curl)
 
-Инструкция по запуску сервиса:
+Ниже приведены примеры для **Windows** (cmd/PowerShell). Если вы используете **Git Bash/WSL** или **Linux**, можно заменить двойные кавычки на одинарные и убрать экранирование `\"`.
 
-Установите Go (версии 1.18 или новее).
-Склонируйте репозиторий: git clone https://github.com/ВАШ-ЛОГИН/ВАШ-РЕПО.git
-Перейдите в папку проекта: cd ВАШ-РЕПО
-Запустите сервер командой go run ./cmd/calc_service/...
-Сервис по умолчанию слушает на http://localhost:8080. Отправляйте POST-запросы на http://localhost:8080/api/v1/calculate с JSON-телом, содержащим поле "expression".
+### Успешный запрос (результат `6`):
+```bash
+curl --location "http://localhost:8080/api/v1/calculate" ^
+  --header "Content-Type: application/json" ^
+  --data "{\"expression\":\"2+2*2\"}"
+```
+Ожидаемый ответ:
+```json
+{
+  "result": "6"
+}
+```
+
+### Ошибка 422 (деление на ноль):
+```bash
+curl --location "http://localhost:8080/api/v1/calculate" ^
+  --header "Content-Type: application/json" ^
+  --data "{\"expression\":\"2/0\"}"
+```
+Ожидаемый ответ:
+```json
+{
+  "error": "Expression is not valid"
+}
+```
+
+### Ошибка 422 (некорректные символы):
+```bash
+curl --location "http://localhost:8080/api/v1/calculate" ^
+  --header "Content-Type: application/json" ^
+  --data "{\"expression\":\"2+a\"}"
+```
+Ожидаемый ответ:
+```json
+{
+  "error": "Expression is not valid"
+}
+```
+
+### Ошибка 500 (внутренняя ошибка сервера):
+При сбое внутри самого приложения ответ будет:
+```json
+{
+  "error": "Internal server error"
+}
+```
+
+## Как запустить проект
+
+1. **Установите Go** (версии 1.18 или новее).
+2. **Склонируйте репозиторий** (или скачайте архив) из GitHub:
+   ```bash
+   git clone https://github.com/<ВАШ-ЛОГИН>/<ИМЯ-РЕПОЗИТОРИЯ>.git
+   ```
+3. **Перейдите в папку** с проектом:
+   ```bash
+   cd <ИМЯ-РЕПОЗИТОРИЯ>
+   ```
+4. **Запустите** приложение:
+   ```bash
+   go run ./cmd/calc_service/...
+   ```
+5. Сервис стартует на порту `8080`. Теперь можно отправлять **POST**-запросы на:
+   ```
+   http://localhost:8080/api/v1/calculate
+   ```
+
+## Дополнительно
+
+- Если в **PowerShell** вы не хотите возиться с экранированием, можете использовать встроенный командлет:
+  ```powershell
+  Invoke-RestMethod `
+    -Uri "http://localhost:8080/api/v1/calculate" `
+    -Method POST `
+    -Body '{"expression": "2+2*2"}' `
+    -ContentType "application/json"
+  ```
+- Если у вас **Git Bash** или **WSL**, то можно писать в стиле Linux:
+  ```bash
+  curl --location 'http://localhost:8080/api/v1/calculate' \
+    --header 'Content-Type: application/json' \
+    --data '{
+      "expression": "2+2*2"
+    }'
+  ```
+
+Теперь вы можете тестировать работу сервиса, отправляя различные арифметические выражения и проверяя результаты.
