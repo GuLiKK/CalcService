@@ -51,9 +51,9 @@
 
 ## Примеры использования (curl)
 
-Ниже приведены примеры для **Windows** (cmd/PowerShell). Если вы используете **Git Bash/WSL** или **Linux**, можно заменить двойные кавычки на одинарные и убрать экранирование `\"`.
+Ниже несколько примеров запроса с помощью `curl` для **Windows** (cmd/PowerShell). Если вы используете **Git Bash/WSL** или **Linux**, можно заменить двойные кавычки на одинарные и убрать экранирование `\"`.
 
-### Успешный запрос (результат `6`):
+### 1. Успешный запрос (результат `6`):
 ```bash
 curl --location "http://localhost:8080/api/v1/calculate" ^
   --header "Content-Type: application/json" ^
@@ -66,7 +66,7 @@ curl --location "http://localhost:8080/api/v1/calculate" ^
 }
 ```
 
-### Ошибка 422 (деление на ноль):
+### 2. Ошибка 422 (деление на ноль):
 ```bash
 curl --location "http://localhost:8080/api/v1/calculate" ^
   --header "Content-Type: application/json" ^
@@ -79,7 +79,7 @@ curl --location "http://localhost:8080/api/v1/calculate" ^
 }
 ```
 
-### Ошибка 422 (некорректные символы):
+### 3. Ошибка 422 (некорректные символы):
 ```bash
 curl --location "http://localhost:8080/api/v1/calculate" ^
   --header "Content-Type: application/json" ^
@@ -92,13 +92,25 @@ curl --location "http://localhost:8080/api/v1/calculate" ^
 }
 ```
 
-### Ошибка 500 (внутренняя ошибка сервера):
+### 4. Ошибка 500 (внутренняя ошибка):
 При сбое внутри самого приложения ответ будет:
 ```json
 {
   "error": "Internal server error"
 }
 ```
+
+## Пример с `Invoke-RestMethod` (PowerShell)
+
+Если не хочется возиться с кавычками в `curl` на Windows, можно использовать встроенный способ PowerShell:
+```powershell
+Invoke-RestMethod `
+  -Uri "http://localhost:8080/api/v1/calculate" `
+  -Method POST `
+  -Body '{"expression": "2+2*2"}' `
+  -ContentType "application/json"
+```
+Ответ придёт в виде объекта PowerShell, содержащего поля JSON.
 
 ## Как запустить проект
 
@@ -113,7 +125,7 @@ curl --location "http://localhost:8080/api/v1/calculate" ^
    ```
 4. **Запустите** приложение:
    ```bash
-   go run ./cmd/calc_service/...
+   go run main.go
    ```
 5. Сервис стартует на порту `8080`. Теперь можно отправлять **POST**-запросы на:
    ```
@@ -122,15 +134,7 @@ curl --location "http://localhost:8080/api/v1/calculate" ^
 
 ## Дополнительно
 
-- Если в **PowerShell** вы не хотите возиться с экранированием, можете использовать встроенный командлет:
-  ```powershell
-  Invoke-RestMethod `
-    -Uri "http://localhost:8080/api/v1/calculate" `
-    -Method POST `
-    -Body '{"expression": "2+2*2"}' `
-    -ContentType "application/json"
-  ```
-- Если у вас **Git Bash** или **WSL**, то можно писать в стиле Linux:
+- Если у вас **Git Bash** или **WSL**, то можно писать в стиле Linux без экранирования:
   ```bash
   curl --location 'http://localhost:8080/api/v1/calculate' \
     --header 'Content-Type: application/json' \
@@ -138,5 +142,4 @@ curl --location "http://localhost:8080/api/v1/calculate" ^
       "expression": "2+2*2"
     }'
   ```
-
-Теперь вы можете тестировать работу сервиса, отправляя различные арифметические выражения и проверяя результаты.
+  В таком случае пример выше с `^` и экранированными кавычками не нужен.
