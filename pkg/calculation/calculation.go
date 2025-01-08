@@ -1,7 +1,6 @@
 package calculation
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -26,8 +25,6 @@ func tokenize(expr string) []string {
 		}
 
 		if char == '-' {
-			// Проверяем, является ли минус унарным (например, "-5" или "2*-3")
-			// Условие: либо первый символ, либо после оператора/скобки
 			if i == 0 || len(tokens) == 0 ||
 				isOperator(tokens[len(tokens)-1]) ||
 				tokens[len(tokens)-1] == "(" {
