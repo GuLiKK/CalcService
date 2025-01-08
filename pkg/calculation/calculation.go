@@ -162,8 +162,3 @@ func precedence(op string) int {
 	}
 	return 0
 }
-
-var (
-	ErrInvalidExpression = errors.New("invalid expression")
-	ErrDivisionByZero    = errors.New("division by zero")
-)
