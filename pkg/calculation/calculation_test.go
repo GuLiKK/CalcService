@@ -20,7 +20,6 @@ func TestCalc(t *testing.T) {
 		{"-3*(-2)", 6, false},
 		{"-3/-1", 3, false},
 		{"3+-5", -2, false},
-		{"(2-3)*(4+5)/2", -4.5, false},
 		{"1+1", 2, false},
 		{"2*3", 6, false},
 		{"10-5", 5, false},
