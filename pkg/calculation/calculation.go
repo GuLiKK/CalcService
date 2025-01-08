@@ -1,7 +1,6 @@
 package calculation
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -17,96 +16,106 @@ func Calc(expression string) (float64, error) {
 
 func tokenize(expr string) []string {
 	var tokens []string
-	var currentToken strings.Builder
+	var curr strings.Builder
+	runes := []rune(expr)
 
-	for i, char := range expr {
-		if char == ' ' {
+	for i := 0; i < len(runes); i++ {
+		c := runes[i]
+		if c == ' ' {
 			continue
 		}
 
-		if char == '-' {
-			if i == 0 || len(tokens) == 0 ||
-				isOperator(tokens[len(tokens)-1]) ||
-				tokens[len(tokens)-1] == "(" {
-				currentToken.WriteRune(char)
+		if c == '-' {
+			if i == 0 {
+				curr.WriteRune(c)
 				continue
 			}
+			last := ""
+			if len(tokens) > 0 {
+				last = tokens[len(tokens)-1]
+			}
+			if isOperator(last) || last == "(" {
+				curr.WriteRune(c)
+				continue
+			}
+			if curr.Len() > 0 {
+				tokens = append(tokens, curr.String())
+				curr.Reset()
+			}
+			tokens = append(tokens, string(c))
+			continue
 		}
 
-		switch char {
-		case '+', '-', '*', '/', '(', ')':
-			if currentToken.Len() > 0 {
-				tokens = append(tokens, currentToken.String())
-				currentToken.Reset()
+		switch c {
+		case '+', '*', '/', '(', ')':
+			if curr.Len() > 0 {
+				tokens = append(tokens, curr.String())
+				curr.Reset()
 			}
-			tokens = append(tokens, string(char))
+			tokens = append(tokens, string(c))
 		default:
-			currentToken.WriteRune(char)
+			curr.WriteRune(c)
 		}
 	}
-	if currentToken.Len() > 0 {
-		tokens = append(tokens, currentToken.String())
+	if curr.Len() > 0 {
+		tokens = append(tokens, curr.String())
 	}
 	return tokens
 }
 
 func infixToPostfix(tokens []string) ([]string, error) {
-	var output []string
-	var operators []string
-
-	for _, token := range tokens {
+	var out, ops []string
+	for _, t := range tokens {
 		switch {
-		case isNumber(token):
-			output = append(output, token)
-		case token == "(":
-			operators = append(operators, token)
-		case token == ")":
-			foundParen := false
-			for len(operators) > 0 {
-				top := operators[len(operators)-1]
-				operators = operators[:len(operators)-1]
+		case isNumber(t):
+			out = append(out, t)
+		case t == "(":
+			ops = append(ops, t)
+		case t == ")":
+			found := false
+			for len(ops) > 0 {
+				top := ops[len(ops)-1]
+				ops = ops[:len(ops)-1]
 				if top == "(" {
-					foundParen = true
+					found = true
 					break
 				}
-				output = append(output, top)
+				out = append(out, top)
 			}
-			if !foundParen {
+			if !found {
 				return nil, ErrInvalidExpression
 			}
-		case isOperator(token):
-			for len(operators) > 0 && precedence(operators[len(operators)-1]) >= precedence(token) {
-				output = append(output, operators[len(operators)-1])
-				operators = operators[:len(operators)-1]
+		case isOperator(t):
+			for len(ops) > 0 && precedence(ops[len(ops)-1]) >= precedence(t) {
+				out = append(out, ops[len(ops)-1])
+				ops = ops[:len(ops)-1]
 			}
-			operators = append(operators, token)
+			ops = append(ops, t)
 		default:
 			return nil, ErrInvalidExpression
 		}
 	}
-
-	for len(operators) > 0 {
-		top := operators[len(operators)-1]
-		operators = operators[:len(operators)-1]
+	for len(ops) > 0 {
+		top := ops[len(ops)-1]
+		ops = ops[:len(ops)-1]
 		if top == "(" {
 			return nil, ErrInvalidExpression
 		}
-		output = append(output, top)
+		out = append(out, top)
 	}
-	return output, nil
+	return out, nil
 }
 
 func evaluatePostfix(postfix []string) (float64, error) {
 	var stack []float64
-
 	for _, token := range postfix {
 		switch {
 		case isNumber(token):
-			num, err := strconv.ParseFloat(token, 64)
-			if err != nil {
+			val, e := strconv.ParseFloat(token, 64)
+			if e != nil {
 				return 0, ErrInvalidExpression
 			}
-			stack = append(stack, num)
+			stack = append(stack, val)
 		case isOperator(token):
 			if len(stack) < 2 {
 				return 0, ErrInvalidExpression
@@ -114,7 +123,6 @@ func evaluatePostfix(postfix []string) (float64, error) {
 			b := stack[len(stack)-1]
 			a := stack[len(stack)-2]
 			stack = stack[:len(stack)-2]
-
 			switch token {
 			case "+":
 				stack = append(stack, a+b)
@@ -128,26 +136,25 @@ func evaluatePostfix(postfix []string) (float64, error) {
 				}
 				stack = append(stack, a/b)
 			default:
-				return 0, fmt.Errorf("Неизвестный оператор: %s", token)
+				return 0, ErrInvalidExpression
 			}
 		default:
 			return 0, ErrInvalidExpression
 		}
 	}
-
 	if len(stack) != 1 {
 		return 0, ErrInvalidExpression
 	}
 	return stack[0], nil
 }
 
-func isNumber(token string) bool {
-	_, err := strconv.ParseFloat(token, 64)
+func isNumber(t string) bool {
+	_, err := strconv.ParseFloat(t, 64)
 	return err == nil
 }
 
-func isOperator(token string) bool {
-	return token == "+" || token == "-" || token == "*" || token == "/"
+func isOperator(t string) bool {
+	return t == "+" || t == "-" || t == "*" || t == "/"
 }
 
 func precedence(op string) int {
